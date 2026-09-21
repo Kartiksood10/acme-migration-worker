@@ -1,0 +1,219 @@
+{
+  "work_items": [
+    {
+      "operation_id": "getAddress",
+      "classification": "FLAT_TO_NESTED_RESPONSE_WITH_PATH_VERSION_SHIFT",
+      "source_method": "GET",
+      "source_path": "/api/v1/address",
+      "target_method": "GET",
+      "target_path": "/api/v2/address",
+      "reasoning_summary": "The endpoint remains a GET address lookup with a versioned path change. The response fields street and zip were not removed permanently; they are now nested under the address property.",
+      "discovery_requirements": [
+        "Search the repository for the source endpoint path /api/v1/address and HTTP method GET; use these as the primary signals rather than assuming operationId getAddress maps directly to a Java method.",
+        "Trace the discovered API client, gateway, adapter, or service call through its response DTO/model and all callers.",
+        "Identify whether response models are generated, hand-written, or mapped through an intermediate object.",
+        "Locate every caller that reads street or zip directly from the source response.",
+        "Search for any existing /api/v2/address integration or target response model before creating or modifying types.",
+        "Verify the target wire format by checking serialization/deserialization configuration and tests."
+      ],
+      "required_changes": [
+        {
+          "change_type": "ENDPOINT_PATH_UPDATE",
+          "action": "Change the downstream request from GET /api/v1/address to GET /api/v2/address wherever the source endpoint is invoked."
+        },
+        {
+          "change_type": "DTO_RESTRUCTURE",
+          "action": "Update response deserialization and mapping so the top-level address property is read first, with street and zip obtained from that nested object."
+        },
+        {
+          "change_type": "CALLER_UPDATE",
+          "action": "Replace direct reads of response.street and response.zip with reads through the nested address object, preserving existing optional/null handling."
+        },
+        {
+          "change_type": "MAPPING_UPDATE",
+          "action": "If an internal domain model remains flat, add or update the adapter mapping from response.address.street and response.address.zip into the existing internal representation."
+        },
+        {
+          "change_type": "TEST_UPDATE",
+          "action": "Update fixtures, mocks, and assertions to use the nested target response shape and verify both street and zip mapping."
+        }
+      ]
+    },
+    {
+      "operation_id": "getData",
+      "classification": "PATH_SHIFT_WITH_HEADER_REMOVAL_AND_RESPONSE_SCHEMA_CHANGE",
+      "source_method": "GET",
+      "source_path": "/api/v1/data",
+      "target_method": "GET",
+      "target_path": "/api/v2/data",
+      "reasoning_summary": "The endpoint remains a GET but moves to the v2 path and no longer accepts the required X-Device-Id header. The response changes transactionAmount to totalAmount, removes discountCode, and widens userId from int32 to int64.",
+      "discovery_requirements": [
+        "Search for the source endpoint path /api/v1/data and HTTP method GET; use these as the primary discovery signals rather than relying on operationId getData as a Java method name.",
+        "Trace the request construction to find where the X-Device-Id header is supplied, validated, or propagated.",
+        "Trace the response DTO/model and all consumers of transactionAmount, discountCode, and userId.",
+        "Search for any existing /api/v2/data call or target model to avoid duplicating an already-supported integration.",
+        "Inspect numeric types at the transport, mapping, persistence, and business-logic boundaries to identify any int32 assumptions for userId.",
+        "Review tests and request interceptors that assert the presence of X-Device-Id."
+      ],
+      "required_changes": [
+        {
+          "change_type": "ENDPOINT_PATH_UPDATE",
+          "action": "Change the downstream request from GET /api/v1/data to GET /api/v2/data."
+        },
+        {
+          "change_type": "REQUEST_HEADER_REMOVAL",
+          "action": "Stop sending X-Device-Id for this request and remove any endpoint-specific requirement that makes the header mandatory."
+        },
+        {
+          "change_type": "RESPONSE_PROPERTY_RENAME",
+          "action": "Map the target response property totalAmount to the internal concept previously populated from transactionAmount; confirm through existing business semantics that this is a rename rather than a new independent amount."
+        },
+        {
+          "change_type": "RESPONSE_PROPERTY_REMOVAL",
+          "action": "Remove or stop expecting discountCode in the target response mapping, and update callers so they do not depend on its presence."
+        },
+        {
+          "change_type": "NUMERIC_TYPE_UPDATE",
+          "action": "Widen the response and downstream handling of userId from int32-compatible storage or variables to int64-compatible types wherever required."
+        },
+        {
+          "change_type": "CALLER_UPDATE",
+          "action": "Update all consumers, serializers, validations, and calculations affected by the renamed amount field, absent discountCode, and widened userId."
+        },
+        {
+          "change_type": "TEST_UPDATE",
+          "action": "Update request assertions to omit X-Device-Id and update response fixtures and assertions for totalAmount, absent discountCode, and an int64-range userId."
+        }
+      ]
+    },
+    {
+      "operation_id": "getProfile",
+      "classification": "RESPONSE_WRAPPER_REMOVAL_WITH_PATH_VERSION_SHIFT",
+      "source_method": "GET",
+      "source_path": "/api/v1/profile",
+      "target_method": "GET",
+      "target_path": "/api/v2/profile",
+      "reasoning_summary": "The endpoint remains a GET with a versioned path change. The metadata wrapper is removed, but its age property remains available at the response top level; age was not deleted.",
+      "discovery_requirements": [
+        "Search for the source endpoint path /api/v1/profile and HTTP method GET; treat operationId getProfile only as a correlation hint.",
+        "Trace the response model and all code that accesses metadata and metadata.age.",
+        "Search for existing /api/v2/profile support and determine whether target DTOs are generated or manually maintained.",
+        "Check nullability behavior: the source metadata object may have been optional, while the target top-level age may have different absence semantics.",
+        "Inspect profile-related fixtures, mock responses, and contract tests."
+      ],
+      "required_changes": [
+        {
+          "change_type": "ENDPOINT_PATH_UPDATE",
+          "action": "Change the downstream request from GET /api/v1/profile to GET /api/v2/profile."
+        },
+        {
+          "change_type": "DTO_RESTRUCTURE",
+          "action": "Change response deserialization or mapping so age is read from the top-level response rather than from a metadata object."
+        },
+        {
+          "change_type": "CALLER_UPDATE",
+          "action": "Replace accesses to response.metadata.age with accesses to the target top-level age property, preserving appropriate handling when age is absent."
+        },
+        {
+          "change_type": "MODEL_CLEANUP",
+          "action": "Remove the metadata wrapper from the target response representation only where it represents this endpoint contract; do not remove the age field."
+        },
+        {
+          "change_type": "TEST_UPDATE",
+          "action": "Update response fixtures and assertions to represent age at the top level and verify behavior for an omitted age value."
+        }
+      ]
+    },
+    {
+      "operation_id": "search",
+      "classification": "HTTP_METHOD_AND_REQUEST_LOCATION_SHIFT_WITH_RESPONSE_NESTING",
+      "source_method": "GET",
+      "source_path": "/api/v1/search",
+      "target_method": "POST",
+      "target_path": "/api/v2/search",
+      "reasoning_summary": "The search endpoint changes from GET to POST and moves query from a required query parameter into a required JSON request body. Its response changes from a flat street/zip object to an object containing nested address.street and address.zip.",
+      "discovery_requirements": [
+        "Search for the source endpoint path /api/v1/search and HTTP method GET; use path and method as the primary discovery signals instead of assuming operationId search identifies the implementation.",
+        "Trace request construction to identify where the required query query parameter is encoded.",
+        "Trace response handling and all callers that read street and zip.",
+        "Search for any existing /api/v2/search implementation, request model, or response model before modifying code.",
+        "Inspect HTTP client abstractions for method-specific behavior such as GET query encoding versus POST JSON serialization.",
+        "Review tests, mocks, and request matchers for both the old query parameter and the new JSON body."
+      ],
+      "required_changes": [
+        {
+          "change_type": "HTTP_METHOD_UPDATE",
+          "action": "Change the downstream invocation from GET to POST for the search operation."
+        },
+        {
+          "change_type": "REQUEST_BODY_RESTRUCTURE",
+          "action": "Remove query from the URL query string and send a required application/json body containing the query property."
+        },
+        {
+          "change_type": "REQUEST_SERIALIZATION_UPDATE",
+          "action": "Ensure the request body is serialized as JSON with the exact target shape and that the query value remains required."
+        },
+        {
+          "change_type": "RESPONSE_DTO_RESTRUCTURE",
+          "action": "Update response parsing so street and zip are obtained from the nested address property."
+        },
+        {
+          "change_type": "CALLER_UPDATE",
+          "action": "Replace direct reads of response.street and response.zip with reads through response.address, retaining null/optional handling."
+        },
+        {
+          "change_type": "MAPPING_UPDATE",
+          "action": "If internal search results remain flat, map address.street and address.zip into the existing internal result representation."
+        },
+        {
+          "change_type": "TEST_UPDATE",
+          "action": "Update request and response fixtures, HTTP method assertions, body assertions, and nested address response assertions."
+        }
+      ]
+    },
+    {
+      "operation_id": "getUser",
+      "classification": "ENDPOINT_REPLACEMENT_INFERRED_AS_CLIENT_LOOKUP",
+      "source_method": "GET",
+      "source_path": "/api/v1/users/{id}",
+      "target_method": "GET",
+      "target_path": "/api/v2/clients/{clientId}",
+      "reasoning_summary": "No explicit target contract is supplied. Among the candidates, GET /api/v2/clients/{clientId} best matches the source operation's resource-by-identifier intent and path parameter shape. This is an inferred replacement and must be validated against the candidate's actual response contract and repository usage; the similarly shaped profile endpoint is less suitable because it has no identifier parameter.",
+      "discovery_requirements": [
+        "Search for the source endpoint path /api/v1/users/{id} and HTTP method GET; use the path template and method as the primary discovery signals rather than treating operationId getUser as a Java method name.",
+        "Trace how the source id path variable is supplied, encoded, validated, and propagated to callers.",
+        "Inspect all target candidates, prioritizing GET /api/v2/clients/{clientId} because it preserves a GET-by-identifier interaction and has a corresponding identifier path variable.",
+        "Retrieve or inspect the actual contract, generated client metadata, controller mapping, or repository implementation for GET /api/v2/clients/{clientId}; confirm that its response semantically replaces the source user response before applying the migration.",
+        "Compare the target response structure with the source metadata.age response and identify whether age is top-level, nested, renamed, or absent.",
+        "Search for existing client lookup code and determine whether it already serves the same business use case as the removed user endpoint.",
+        "Do not proceed with an automated replacement if the candidate's response or business semantics do not match; document the mismatch for API-owner clarification."
+      ],
+      "required_changes": [
+        {
+          "change_type": "ENDPOINT_REPLACEMENT",
+          "action": "Replace calls to GET /api/v1/users/{id} with the validated target GET /api/v2/clients/{clientId}, mapping the source identifier to the target clientId path variable only after confirming their semantic equivalence."
+        },
+        {
+          "change_type": "PATH_PARAMETER_RENAME",
+          "action": "Update request construction, method arguments, templates, and mocks from the source id path parameter to the target clientId parameter."
+        },
+        {
+          "change_type": "RESPONSE_MAPPING_UPDATE",
+          "action": "Adapt response deserialization and domain mapping to the actual target client response; specifically verify how the source metadata.age value is represented before changing callers."
+        },
+        {
+          "change_type": "CALLER_UPDATE",
+          "action": "Update all callers that depend on the source user lookup result according to the confirmed target response shape, including any metadata or age access paths."
+        },
+        {
+          "change_type": "CONTRACT_VALIDATION",
+          "action": "Validate the inferred replacement against the target API documentation or generated contract and reject the migration if GET /api/v2/clients/{clientId} does not provide the required user/client lookup semantics."
+        },
+        {
+          "change_type": "TEST_UPDATE",
+          "action": "Update path-parameter, response-mapping, and integration fixtures only after the target candidate and its response schema have been confirmed."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+import json
+import copy
+
+# Input : source_openapi.json, target_openapi.json, raw_diffs.json
+# Output : migration_context.json (by grouping source, target endpoints based on operationId)
+class ContextBuilder:
+    def __init__(self, source_data: dict, target_data: dict, oasdiff_findings: list):
+        """
+        Initializes the ContextBuilder with generic Source and Target OpenAPI specifications.
+        """
+        self.source_data = source_data
+        self.target_data = target_data
+        self.oasdiff_findings = oasdiff_findings
+
+    def _resolve_refs(self, schema: dict, root_doc: dict, visited: set = None) -> dict:
+        """Recursively inline OpenAPI $ref pointers so the LLM sees the complete schema."""
+        if visited is None:
+            visited = set()
+
+        if not isinstance(schema, dict):
+            return schema
+
+        # If a reference is found, resolve it from the root document
+        if "$ref" in schema:
+            ref_path = schema["$ref"]
+            if ref_path in visited:
+                return {"description": f"Circular reference to {ref_path}"}
+            
+            visited.add(ref_path)
+            parts = ref_path.lstrip("#/").split("/")
+            resolved = root_doc
+            for part in parts:
+                resolved = resolved.get(part, {})
+                
+            # Recursively resolve the contents of the referenced object
+            return self._resolve_refs(copy.deepcopy(resolved), root_doc, visited)
+
+        # Recursively traverse all nested dictionary properties
+        resolved_schema = {}
+        for key, value in schema.items():
+            if isinstance(value, dict):
+                resolved_schema[key] = self._resolve_refs(value, root_doc, visited)
+            elif isinstance(value, list):
+                resolved_schema[key] = [
+                    self._resolve_refs(item, root_doc, visited) if isinstance(item, dict) else item 
+                    for item in value
+                ]
+            else:
+                resolved_schema[key] = value
+
+        return resolved_schema
+
+    def _extract_endpoint(self, openapi_data: dict, target_op_id: str) -> dict:
+        """Finds an endpoint by operationId and returns its fully resolved schema."""
+        if not openapi_data or "paths" not in openapi_data:
+            return None
+
+        for path, methods in openapi_data["paths"].items():
+            for method, details in methods.items():
+                if details.get("operationId") == target_op_id:
+                    # Resolve all nested refs within the parameters and responses
+                    resolved_details = self._resolve_refs(copy.deepcopy(details), openapi_data)
+                    return {
+                        "path": path,
+                        "method": method.upper(),
+                        "details": resolved_details
+                    }
+        return None
+
+    def build_context(self) -> dict:
+        """
+        Groups structural diffs by operationId and pairs them with their Source and Target schemas.
+        """
+        print("Grouping findings and resolving JSON schemas...")
+        work_items_map = {}
+
+        # Bucket findings by operationId
+        for finding in self.oasdiff_findings:
+            op_id = finding.get("operationId", "unknown")
+            if op_id not in work_items_map:
+                work_items_map[op_id] = set()
+            work_items_map[op_id].add(finding["text"])
+
+        final_work_items = []
+        for op_id, findings in work_items_map.items():
+            if op_id == "unknown":
+                continue
+
+            source_contract = self._extract_endpoint(self.source_data, op_id)
+            target_contract = self._extract_endpoint(self.target_data, op_id)
+
+            target_candidates = []
+            if not target_contract:
+                # Fallback: Provide all target endpoints for the Planner to deduce semantic shifts
+                for path, methods in self.target_data.get("paths", {}).items():
+                    for method, details in methods.items():
+                        target_candidates.append({
+                            "operationId": details.get("operationId"),
+                            "path": path,
+                            "method": method.upper()
+                        })
+
+            final_work_items.append({
+                "operation_id": op_id,
+                "oasdiff_findings": list(findings),
+                "source_contract": source_contract,
+                "target_contract": target_contract,
+                "target_candidates": target_candidates if target_candidates else None
+            })
+
+        return {"work_items": final_work_items}
+
+# =====================================================================
+# Execution Block (For local testing)
+# =====================================================================
+if __name__ == "__main__":
+    try:
+        # Load raw data generated by earlier steps
+        with open("source_openapi.json", "r") as f:
+            source_raw = json.load(f)
+        with open("target_openapi.json", "r") as f:
+            target_raw = json.load(f)
+        with open("raw_diffs.json", "r") as f:
+            diffs = json.load(f)
+
+        builder = ContextBuilder(source_raw, target_raw, diffs)
+        context = builder.build_context()
+
+        with open("migration_context.json", "w") as f:
+            json.dump(context, f, indent=2)
+            
+        print("Successfully generated migration_context.json")
+    except FileNotFoundError as e:
+        print(f"Skipping local execution: {e}")

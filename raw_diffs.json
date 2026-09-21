@@ -1,0 +1,164 @@
+[
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getAddress",
+    "path": "/api/v1/address",
+    "section": "paths",
+    "baseSource": {
+      "file": "http://localhost:8080/v3/api-docs/v1"
+    },
+    "fingerprint": "b3987d183769"
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getData",
+    "path": "/api/v1/data",
+    "section": "paths",
+    "baseSource": {
+      "file": "http://localhost:8080/v3/api-docs/v1"
+    },
+    "fingerprint": "f8afbf83461c"
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getProfile",
+    "path": "/api/v1/profile",
+    "section": "paths",
+    "baseSource": {
+      "file": "http://localhost:8080/v3/api-docs/v1"
+    },
+    "fingerprint": "9712b88205aa"
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "search",
+    "path": "/api/v1/search",
+    "section": "paths",
+    "baseSource": {
+      "file": "http://localhost:8080/v3/api-docs/v1"
+    },
+    "fingerprint": "4c457048b616"
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getUser",
+    "path": "/api/v1/users/{id}",
+    "section": "paths",
+    "baseSource": {
+      "file": "http://localhost:8080/v3/api-docs/v1"
+    },
+    "fingerprint": "c2f29b420a5e"
+  },
+  {
+    "id": "response-property-type-changed",
+    "text": "the `userId` response's property `format` changed from `int32` to `int64` for status `200`",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getData",
+    "path": "/api/v2/data",
+    "section": "paths",
+    "fingerprint": "d4cdc02cdb27"
+  },
+  {
+    "id": "api-removed-without-deprecation",
+    "text": "api removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "search",
+    "path": "/api/v2/search",
+    "section": "paths",
+    "baseSource": {
+      "file": "temp_normalized_source.json"
+    },
+    "fingerprint": "c2c912939863"
+  },
+  {
+    "id": "api-path-removed-without-deprecation",
+    "text": "api path removed without deprecation",
+    "level": 3,
+    "operation": "GET",
+    "operationId": "getUser",
+    "path": "/api/v2/users/{id}",
+    "section": "paths",
+    "baseSource": {
+      "file": "temp_normalized_source.json"
+    },
+    "fingerprint": "8581a3c6584e"
+  },
+  {
+    "id": "response-optional-property-removed",
+    "text": "removed the optional property `street` from the response with the `200` status",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getAddress",
+    "path": "/api/v2/address",
+    "section": "paths",
+    "fingerprint": "3e6a5e68dad0"
+  },
+  {
+    "id": "response-optional-property-removed",
+    "text": "removed the optional property `zip` from the response with the `200` status",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getAddress",
+    "path": "/api/v2/address",
+    "section": "paths",
+    "fingerprint": "57607cd2005d"
+  },
+  {
+    "id": "request-parameter-removed",
+    "text": "deleted the `header` request parameter `x-device-id`",
+    "comment": "This is a warning because some clients may return an error when receiving an unexpected parameter. It is recommended to deprecate the parameter first.",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getData",
+    "path": "/api/v2/data",
+    "section": "paths",
+    "fingerprint": "eca10c193a18"
+  },
+  {
+    "id": "response-optional-property-removed",
+    "text": "removed the optional property `discountCode` from the response with the `200` status",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getData",
+    "path": "/api/v2/data",
+    "section": "paths",
+    "fingerprint": "15fab2edac8f"
+  },
+  {
+    "id": "response-optional-property-removed",
+    "text": "removed the optional property `transactionAmount` from the response with the `200` status",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getData",
+    "path": "/api/v2/data",
+    "section": "paths",
+    "fingerprint": "6cc23feb33e7"
+  },
+  {
+    "id": "response-optional-property-removed",
+    "text": "removed the optional property `metadata` from the response with the `200` status",
+    "level": 2,
+    "operation": "GET",
+    "operationId": "getProfile",
+    "path": "/api/v2/profile",
+    "section": "paths",
+    "fingerprint": "1c5ca138f8d4"
+  }
+]

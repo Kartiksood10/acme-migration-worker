@@ -1,0 +1,408 @@
+{
+  "work_items": [
+    {
+      "operation_id": "getAddress",
+      "oasdiff_findings": [
+        "removed the optional property `zip` from the response with the `200` status",
+        "api path removed without deprecation",
+        "removed the optional property `street` from the response with the `200` status"
+      ],
+      "source_contract": {
+        "path": "/api/v1/address",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-1"
+          ],
+          "operationId": "getAddress",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "street": {
+                        "type": "string"
+                      },
+                      "zip": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_contract": {
+        "path": "/api/v2/address",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-2"
+          ],
+          "operationId": "getAddress",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "object",
+                        "properties": {
+                          "street": {
+                            "type": "string"
+                          },
+                          "zip": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_candidates": null
+    },
+    {
+      "operation_id": "getData",
+      "oasdiff_findings": [
+        "deleted the `header` request parameter `x-device-id`",
+        "api path removed without deprecation",
+        "the `userId` response's property `format` changed from `int32` to `int64` for status `200`",
+        "removed the optional property `discountCode` from the response with the `200` status",
+        "removed the optional property `transactionAmount` from the response with the `200` status"
+      ],
+      "source_contract": {
+        "path": "/api/v1/data",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-1"
+          ],
+          "operationId": "getData",
+          "parameters": [
+            {
+              "name": "X-Device-Id",
+              "in": "header",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "transactionAmount": {
+                        "type": "string"
+                      },
+                      "discountCode": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "integer",
+                        "format": "int32"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_contract": {
+        "path": "/api/v2/data",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-2"
+          ],
+          "operationId": "getData",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "totalAmount": {
+                        "type": "string"
+                      },
+                      "userId": {
+                        "type": "integer",
+                        "format": "int64"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_candidates": null
+    },
+    {
+      "operation_id": "getProfile",
+      "oasdiff_findings": [
+        "api path removed without deprecation",
+        "removed the optional property `metadata` from the response with the `200` status"
+      ],
+      "source_contract": {
+        "path": "/api/v1/profile",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-1"
+          ],
+          "operationId": "getProfile",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "metadata": {
+                        "type": "object",
+                        "properties": {
+                          "age": {
+                            "type": "integer",
+                            "format": "int32"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_contract": {
+        "path": "/api/v2/profile",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-2"
+          ],
+          "operationId": "getProfile",
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "age": {
+                        "type": "integer",
+                        "format": "int32"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_candidates": null
+    },
+    {
+      "operation_id": "search",
+      "oasdiff_findings": [
+        "api removed without deprecation",
+        "api path removed without deprecation"
+      ],
+      "source_contract": {
+        "path": "/api/v1/search",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-1"
+          ],
+          "operationId": "search",
+          "parameters": [
+            {
+              "name": "query",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "street": {
+                        "type": "string"
+                      },
+                      "zip": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_contract": {
+        "path": "/api/v2/search",
+        "method": "POST",
+        "details": {
+          "tags": [
+            "producer-controller-v-2"
+          ],
+          "operationId": "search",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "object",
+                        "properties": {
+                          "street": {
+                            "type": "string"
+                          },
+                          "zip": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_candidates": null
+    },
+    {
+      "operation_id": "getUser",
+      "oasdiff_findings": [
+        "api path removed without deprecation"
+      ],
+      "source_contract": {
+        "path": "/api/v1/users/{id}",
+        "method": "GET",
+        "details": {
+          "tags": [
+            "producer-controller-v-1"
+          ],
+          "operationId": "getUser",
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "*/*": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "metadata": {
+                        "type": "object",
+                        "properties": {
+                          "age": {
+                            "type": "integer",
+                            "format": "int32"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "target_contract": null,
+      "target_candidates": [
+        {
+          "operationId": "search",
+          "path": "/api/v2/search",
+          "method": "POST"
+        },
+        {
+          "operationId": "getProfile",
+          "path": "/api/v2/profile",
+          "method": "GET"
+        },
+        {
+          "operationId": "getData",
+          "path": "/api/v2/data",
+          "method": "GET"
+        },
+        {
+          "operationId": "getClient",
+          "path": "/api/v2/clients/{clientId}",
+          "method": "GET"
+        },
+        {
+          "operationId": "getAddress",
+          "path": "/api/v2/address",
+          "method": "GET"
+        }
+      ]
+    }
+  ]
+}

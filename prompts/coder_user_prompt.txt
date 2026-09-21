@@ -1,0 +1,19 @@
+CURRENT WORK ITEM STRATEGY:
+{work_item_strategy}
+
+TARGET CONTRACT TRUTH (OPENAPI SCHEMA):
+{target_contract_truth}
+
+INSTRUCTIONS:
+Begin discovery now. Locate the Feign client using the Source path and HTTP method, trace its DTOs, apply mutations, and run Maven validation.
+
+MIGRATION EXECUTION PHASES (Apply conditionally based on Target Contract):
+1. URI & Method: Update the Feign client URI and HTTP method to match the target contract. (Always required)
+2. Method Signature: If the semantic domain or path parameters change, rename the Java method and parameters to accurately reflect the new domain.
+3. DTO Schema Check: Compare the existing Java DTO to the TARGET CONTRACT TRUTH. 
+   - If the schema changed (e.g., flattened nesting, removed wrappers, widened types, or renamed properties), you MUST update or replace the Java DTO to EXACTLY match the new contract. 
+   - If the schema is structurally identical, leave the DTO alone.
+4. Downstream Code: If you modified the method signature or DTO schema, you MUST update all downstream services, mappers, and unit tests to accommodate the new structure.
+
+CRITICAL RESTRICTION - PREVENTING THE "GREEN-TEST ILLUSION":
+If the target contract dictates a structural change, you are strictly forbidden from retaining legacy source DTO hierarchies or artificial wrappers just to make the compiler or legacy unit tests pass quickly. You MUST implement the exact response fields defined in the TARGET CONTRACT TRUTH and perform the downstream refactoring required to support it.

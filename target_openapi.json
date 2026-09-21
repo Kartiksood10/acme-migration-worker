@@ -1,0 +1,135 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "OpenAPI definition", "version": "v0" },
+  "servers": [
+    { "url": "http://localhost:8080", "description": "Generated server url" }
+  ],
+  "paths": {
+    "/api/v2/search": {
+      "post": {
+        "tags": ["producer-controller-v-2"],
+        "operationId": "search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SearchRequestDto" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddressResponseV2" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/profile": {
+      "get": {
+        "tags": ["producer-controller-v-2"],
+        "operationId": "getProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ProfileResponseV2" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/data": {
+      "get": {
+        "tags": ["producer-controller-v-2"],
+        "operationId": "getData",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/TransactionDtoV2" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/clients/{clientId}": {
+      "get": {
+        "tags": ["producer-controller-v-2"],
+        "operationId": "getClient",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ProfileResponseV2" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/address": {
+      "get": {
+        "tags": ["producer-controller-v-2"],
+        "operationId": "getAddress",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddressResponseV2" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SearchRequestDto": {
+        "type": "object",
+        "properties": { "query": { "type": "string" } }
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "street": { "type": "string" },
+          "zip": { "type": "string" }
+        }
+      },
+      "AddressResponseV2": {
+        "type": "object",
+        "properties": { "address": { "$ref": "#/components/schemas/Address" } }
+      },
+      "ProfileResponseV2": {
+        "type": "object",
+        "properties": { "age": { "type": "integer", "format": "int32" } }
+      },
+      "TransactionDtoV2": {
+        "type": "object",
+        "properties": {
+          "totalAmount": { "type": "string" },
+          "userId": { "type": "integer", "format": "int64" }
+        }
+      }
+    }
+  }
+}

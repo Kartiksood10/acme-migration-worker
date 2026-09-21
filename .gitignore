@@ -1,0 +1,55 @@
+# =========================
+# Environment Variables & Secrets (CRITICAL)
+# =========================
+.env
+.env.*
+*.pem
+secrets.json
+
+# =========================
+# Python Virtual Environments
+# =========================
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# =========================
+# Python Bytecode & Cache
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# =========================
+# IDEs & Editors
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*.workspace
+
+# =========================
+# macOS Specific
+# =========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =========================
+# Agent Execution Artifacts 
+# =========================
+# (Uncomment these if you DO NOT want to push the generated JSONs to GitHub. 
+# Leave them commented if you want to use them as examples in your public repo.)
+# raw_diffs.json
+# migration_context.json
+# migration_plan.json

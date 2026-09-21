@@ -1,0 +1,142 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "OpenAPI definition", "version": "v0" },
+  "servers": [
+    { "url": "http://localhost:8080", "description": "Generated server url" }
+  ],
+  "paths": {
+    "/api/v1/users/{id}": {
+      "get": {
+        "tags": ["producer-controller-v-1"],
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ProfileResponseV1" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": ["producer-controller-v-1"],
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddressResponseV1" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "tags": ["producer-controller-v-1"],
+        "operationId": "getProfile",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ProfileResponseV1" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/data": {
+      "get": {
+        "tags": ["producer-controller-v-1"],
+        "operationId": "getData",
+        "parameters": [
+          {
+            "name": "X-Device-Id",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/TransactionDtoV1" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/address": {
+      "get": {
+        "tags": ["producer-controller-v-1"],
+        "operationId": "getAddress",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddressResponseV1" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Metadata": {
+        "type": "object",
+        "properties": { "age": { "type": "integer", "format": "int32" } }
+      },
+      "ProfileResponseV1": {
+        "type": "object",
+        "properties": {
+          "metadata": { "$ref": "#/components/schemas/Metadata" }
+        }
+      },
+      "AddressResponseV1": {
+        "type": "object",
+        "properties": {
+          "street": { "type": "string" },
+          "zip": { "type": "string" }
+        }
+      },
+      "TransactionDtoV1": {
+        "type": "object",
+        "properties": {
+          "transactionAmount": { "type": "string" },
+          "discountCode": { "type": "string" },
+          "userId": { "type": "integer", "format": "int32" }
+        }
+      }
+    }
+  }
+}
