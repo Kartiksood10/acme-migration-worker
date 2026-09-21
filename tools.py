@@ -3,6 +3,10 @@ import base64
 from langchain_core.tools import tool
 from sandbox_manager import SandboxManager
 
+# List of tools that the LLM can use to inspect and modify the target repository.
+# The @tool annotation allows LangChain to translate the function's name, required arguments, and description into a JSON schema that the LLM can read.
+# When the LLM decides to use a tool, it outputs a JSON request. LangChain intercepts this request, and Python executes the actual code (inside the Docker sandbox).
+# This back-and-forth execution loop (ReAct) continues until the LLM achieves a passing build.
 def build_agent_tools(manager: SandboxManager):
     """
     Factory function that creates tool instances bound to a specific SandboxManager.
