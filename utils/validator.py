@@ -1,4 +1,4 @@
-from sandbox_manager import SandboxManager
+from utils.sandbox_manager import SandboxManager
 
 # Ensures that all old API endpoints have been updated to the new API endpoints based on the input openapi.json
 class ContractValidator:

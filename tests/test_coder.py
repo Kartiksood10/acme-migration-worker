@@ -7,11 +7,11 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, ToolMessage, AIMessage
 
 # Import our custom environment orchestration and validation modules
-from sandbox_manager import SandboxManager
-from tools import build_agent_tools
-from validator import ContractValidator
+from utils.sandbox_manager import SandboxManager
+from agent.tools import build_agent_tools
+from utils.validator import ContractValidator
 
-
+# Test Coder Agent for testing endpoint one at a time (Pre-LangGraph code)
 class CoderAgent:
     def __init__(self, sandbox_manager: SandboxManager):
         load_dotenv()

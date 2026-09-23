@@ -1,7 +1,7 @@
 import os
 import base64
 from langchain_core.tools import tool
-from sandbox_manager import SandboxManager
+from utils.sandbox_manager import SandboxManager
 
 # List of tools that the LLM can use to inspect and modify the target repository.
 # The @tool annotation allows LangChain to translate the function's name, required arguments, and description into a JSON schema that the LLM can read.

@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 # 1. Import our custom Pydantic schemas from the schemas.py file we just created
-from schemas import MigrationPlan
+from pipeline.schemas import MigrationPlan
 
 class MigrationPlanner:
     def __init__(self):
