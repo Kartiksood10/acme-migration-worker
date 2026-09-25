@@ -10,6 +10,7 @@ from agent.graph_state import CoderState
 from agent.tools import build_agent_tools
 from utils.validator import ContractValidator
 
+# Defines the nodes, edges and returns the compiled graph for the inner coder_graph
 def build_coder_graph(sandbox_manager):
     """
     Factory function that compiles the LangGraph application using a LIVE sandbox.
@@ -36,7 +37,7 @@ def build_coder_graph(sandbox_manager):
     # NODES
     # ==========================================
 
-    # LLM Node
+    # LLM Node - LLM with tools returns a response based on input sent via messages
     def llm_node(state: CoderState):
         print(f"\n[Graph] LLM Node thinking... (Turn {state.get('turn_count', 0)})")
         response = llm_with_tools.invoke(state["messages"])
@@ -45,7 +46,7 @@ def build_coder_graph(sandbox_manager):
             "turn_count": state.get("turn_count", 0) + 1
         }
 
-    # Maven Node
+    # Maven Node - Runs maven test inside the sandbox
     def maven_node(state: CoderState):
         print("\n[Graph] Gate 1: Forcing Maven Validation Node...")
         success, logs = sandbox_manager.run_maven_test()
@@ -58,7 +59,7 @@ def build_coder_graph(sandbox_manager):
             error_msg = f"MAVEN FAILED. Fix the compilation errors:\n{logs[-1000:]}"
             return {"messages": [HumanMessage(content=error_msg)]}
 
-    # Contract Node
+    # Contract Node - validate if endpoint has been migrated to target patb
     def contract_node(state: CoderState):
         print("\n[Graph] Gate 2: Running Static Contract Validation...")
         work_item = state["work_item"]
@@ -84,6 +85,8 @@ def build_coder_graph(sandbox_manager):
     # ==========================================
     # EDGES (The Routing Logic)
     # ==========================================
+
+    # Edge for LLM->tools/ LLM->Maven based on what LLM requests
     def should_continue(state: CoderState) -> Literal["tools", "maven_node"]:
         last_message = state["messages"][-1]
 

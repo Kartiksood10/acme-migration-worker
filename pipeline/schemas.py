@@ -5,9 +5,28 @@
 
 from pydantic import BaseModel, Field
 from typing import List
+from enum import Enum
+from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
 
 # Concept: In Python, type hinting (e.g., change_type: str) is technically optional, 
 # but Pydantic uses it to enforce strict runtime validation.
+
+# OpenAPI doc can be input from a hosted URL or by uploading raw JSON/YAML file
+class ContractType(str, Enum):
+    """Defines the two supported methods for supplying an OpenAPI contract."""
+    URL = "URL"
+    UPLOAD = "UPLOAD"
+
+class ContractReference(BaseModel):
+    """
+    A standardized payload instructing the system on how to retrieve a contract.
+    If type is URL, 'location' must be provided.
+    If type is UPLOAD, 'content' (raw JSON/YAML string) must be provided.
+    """
+    type: ContractType
+    location: Optional[str] = Field(default=None, description="The HTTP URL to fetch the OpenAPI spec.")
+    content: Optional[str] = Field(default=None, description="The raw JSON or YAML string uploaded by the user.")
 
 class RequiredChange(BaseModel):
     """Represents a single, actionable mutation the Coder must make."""

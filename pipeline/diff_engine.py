@@ -1,109 +1,121 @@
 import subprocess
 import json
-import urllib.request
 import tempfile
 import os
+from typing import Dict, Any, List, Optional, Tuple
 
-# Input : source_openapi.json, target_openapi.json
-# Output: raw_diffs.json (using oasdiff)
+# Uses oasdiff CLI to detect breaking changes between source and target OpenAPI contracts
 class DiffEngine:
+    """
+    Computes breaking changes between two in-memory OpenAPI dictionaries.
+    Uses ephemeral OS temp files to interface securely with the oasdiff CLI.
+    Auto-detects base path shifts to support generic migrations.
+    """
     def __init__(self):
-        print("DiffEngine initialized. Ready to compute API contracts.")
+        pass
 
-    def _execute_oasdiff(self, base_source: str, revision_source: str) -> list:
-        """
-        Runs the oasdiff CLI and returns the JSON output.
-
-        Args:
-            base_source (str): The path to the base OpenAPI specification.
-            revision_source (str): The path to the revision OpenAPI specification.
-
-        Returns:
-            list: A list of breaking changes detected by oasdiff.
-        """
+    def _execute_oasdiff(self, base_path: str, revision_path: str) -> list:
+        """Runs the oasdiff CLI against two physical file paths and returns JSON."""
         command = [
-            "oasdiff",
-            "breaking",
-            base_source,
-            revision_source,
-            "--format",
-            "json"
+            "oasdiff", "breaking",
+            base_path, revision_path,
+            "--format", "json"
         ]
         
         result = subprocess.run(command, capture_output=True, text=True)
         raw_output = result.stdout.strip()
         error_output = result.stderr.strip()
         
-        if "connection refused" in error_output.lower() or "no such host" in error_output.lower():
-             raise ConnectionError("ERROR: Could not connect to the Producer. Is Spring Boot running?")
+        if error_output:
+            print(f"OASDiff Diagnostic: {error_output}")
              
         if not raw_output or raw_output == "[]":
             return []
             
         return json.loads(raw_output)
 
-    def get_breaking_changes(self, source_url: str, target_url: str, path_mapping: tuple = None) -> list:
+    def _auto_detect_mapping(self, source_openapi: Dict[str, Any], target_openapi: Dict[str, Any]) -> Optional[Tuple[str, str]]:
         """
-        The main entry point for detecting breaking changes between two API contracts.
-
-        Args:
-            source_url (str): The URL to the source API contract.
-            target_url (str): The URL to the target API contract.
-            path_mapping (tuple, optional): A mapping of paths between the source and target contracts. Defaults to None.
-
-        Returns:
-            list: A list of breaking changes detected by oasdiff.
+        Dynamically calculates the common base path for both contracts.
+        Example: If Source paths start with '/api/v1' and Target paths start with '/api/v2',
+        it returns ('/api/v1', '/api/v2').
         """
+        def get_common_prefix(openapi_dict: dict) -> str:
+            paths = list(openapi_dict.get("paths", {}).keys())
+            if not paths:
+                return ""
+            
+            # Split paths by '/' to compare directory levels 
+            # e.g. ['', 'api', 'v1', 'address']
+            split_paths = [p.strip("/").split("/") for p in paths]
+            common_parts = []
+            
+            # Zip allows us to iterate through the path parts vertically across all endpoints
+            for chars in zip(*split_paths):
+                # If all endpoints share this exact path segment, keep it
+                if len(set(chars)) == 1:
+                    common_parts.append(chars[0])
+                else:
+                    break
+            return "/" + "/".join(common_parts) if common_parts else ""
+
+        src_prefix = get_common_prefix(source_openapi)
+        tgt_prefix = get_common_prefix(target_openapi)
+
+        # Only return a mapping if a definitive version shift is detected
+        if src_prefix and tgt_prefix and src_prefix != tgt_prefix:
+            print(f"Auto-detected base path shift: {src_prefix} -> {tgt_prefix}")
+            return (src_prefix, tgt_prefix)
         
-        print("Running Pass 1: Checking for base path and routing changes...")
-        # Note: In the MVP, oasdiff outputs JSON directly, so we just use the execution output.
-        pass1_findings = self._execute_oasdiff(source_url, target_url)
+        return None
 
-        print("Running Pass 2: Checking for normalized schema and parameter changes...")
-        with urllib.request.urlopen(source_url) as response:
-            source_json = response.read().decode('utf-8')
+    def get_breaking_changes(self, source_openapi: Dict[str, Any], target_openapi: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Detects breaking changes. Normalizes path shifts automatically if detected.
+        """
+        source_str = json.dumps(source_openapi)
+        target_str = json.dumps(target_openapi)
 
-        if path_mapping:
-            source_prefix, target_prefix = path_mapping
-            source_json = source_json.replace(source_prefix, target_prefix)
+        # 1. Create secure, ephemeral temp files that the OS tracks and isolates
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as src_file, \
+             tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tgt_file:
+            
+            src_file.write(source_str)
+            tgt_file.write(target_str)
+            src_path, tgt_path = src_file.name, tgt_file.name
 
-        temp_source_path = "temp_normalized_source.json"
-        with open(temp_source_path, "w") as f:
-            f.write(source_json)
+        try:
+            print("Running Pass 1: Checking for strict routing changes...")
+            pass1_findings = self._execute_oasdiff(src_path, tgt_path)
 
-        pass2_findings = self._execute_oasdiff(temp_source_path, target_url)
+            print("Running Pass 2: Checking for normalized schema changes...")
+            
+            # Auto-detect the mapping instead of requiring manual UI configuration
+            path_mapping = self._auto_detect_mapping(source_openapi, target_openapi)
+            
+            if path_mapping:
+                source_prefix, target_prefix = path_mapping
+                source_str = source_str.replace(source_prefix, target_prefix)
 
-        if os.path.exists(temp_source_path):
-            os.remove(temp_source_path)
+            # Create an isolated temp file for the normalized source
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as norm_src_file:
+                norm_src_file.write(source_str)
+                norm_src_path = norm_src_file.name
+
+            try:
+                pass2_findings = self._execute_oasdiff(norm_src_path, tgt_path)
+            finally:
+                # Instantly destroy the normalized temp file
+                if os.path.exists(norm_src_path):
+                    os.remove(norm_src_path)
+
+        finally:
+            # 2. Guarantee destruction of primary temporary files regardless of exceptions
+            if os.path.exists(src_path):
+                os.remove(src_path)
+            if os.path.exists(tgt_path):
+                os.remove(tgt_path)
 
         # Merge findings using the unique fingerprint to prevent overwriting distinct endpoint changes
         merged_findings = {f.get('fingerprint'): f for f in pass1_findings + pass2_findings if f.get('fingerprint')}
         return list(merged_findings.values())
-
-# =====================================================================
-# Execution Block: Fetch live specs and save for context_builder.py
-# =====================================================================
-if __name__ == "__main__":
-    engine = DiffEngine()
-    
-    # 1. Define your live local Spring Boot endpoints
-    source_url = "http://localhost:8080/v3/api-docs/v1"
-    target_url = "http://localhost:8080/v3/api-docs/v2"
-    
-    try:
-        # 2. Download and save the raw OpenAPI specs
-        print("Downloading live OpenAPI specifications...")
-        urllib.request.urlretrieve(source_url, "source_openapi.json")
-        urllib.request.urlretrieve(target_url, "target_openapi.json")
-        
-        # 3. Execute the diff engine (passing the path mapping for normalization)
-        changes = engine.get_breaking_changes(source_url, target_url, path_mapping=('/api/v1', '/api/v2'))
-        
-        # 4. Save the raw diffs
-        with open("raw_diffs.json", "w") as f:
-            json.dump(changes, f, indent=2)
-            
-        print(f"\nSUCCESS: Saved source_openapi.json, target_openapi.json, and raw_diffs.json ({len(changes)} breaking changes found).")
-        
-    except Exception as error:
-        print(error)

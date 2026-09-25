@@ -7,6 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 # 1. Import our custom Pydantic schemas from the schemas.py file we just created
 from pipeline.schemas import MigrationPlan
 
+# Generates the final migration plan using gpt-5.6-luna & the input migration_context
 class MigrationPlanner:
     def __init__(self):
         # Concept: load_dotenv() automatically parses the .env file and loads the variables into os.environ
