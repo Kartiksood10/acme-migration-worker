@@ -110,35 +110,4 @@ def build_agent_tools(manager: SandboxManager):
 
         return f"SUCCESS: New file created at {filepath}."
 
-    @tool
-    def run_maven_validation() -> str:
-        """
-        Executes 'mvn clean test' inside the sandbox.
-        Returns 'MAVEN_PASS' or 'MAVEN_FAIL' with bounded compilation and Surefire diagnostic logs.
-        """
-        success, logs = manager.run_maven_test()
-        if success:
-            return "MAVEN_PASS"
-
-        relevant_lines = []
-        capture_test_summary = False
-
-        for line in logs.split('\n'):
-            line_clean = line.strip()
-            if "[ERROR]" in line and ("COMPILATION ERROR" in line or ".java:[" in line):
-                relevant_lines.append(line_clean)
-            elif "Failed tests:" in line or "Tests run:" in line and "Failures:" in line:
-                capture_test_summary = True
-                relevant_lines.append(line_clean)
-            elif capture_test_summary and line_clean.startswith("[ERROR]"):
-                relevant_lines.append(line_clean)
-            elif capture_test_summary and line_clean == "":
-                capture_test_summary = False
-
-        if not relevant_lines:
-            relevant_lines = [line for line in logs.split('\n') if "[ERROR]" in line]
-
-        bounded_diag = "\n".join(relevant_lines[:25])
-        return f"MAVEN_FAIL\nDiagnostics:\n{bounded_diag}"
-
-    return [search_symbol, read_file_lines, apply_targeted_patch, create_new_java_file, run_maven_validation]
+    return [search_symbol, read_file_lines, apply_targeted_patch, create_new_java_file]

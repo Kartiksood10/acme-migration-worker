@@ -88,6 +88,12 @@ def build_coder_graph(sandbox_manager):
 
     # Edge for LLM->tools/ LLM->Maven based on what LLM requests
     def should_continue(state: CoderState) -> Literal["tools", "maven_node"]:
+
+        # After 30 tool calls, force maven node to avoid infinite tool call loop
+        if state.get("turn_count", 0) >= 30:
+            print(f"[Router] ⚠️ MAX TURNS REACHED ({state.get('turn_count', 0)}). Forcing Gate 1 (Maven)...")
+            return "maven_node"
+        
         last_message = state["messages"][-1]
 
         # if LLM asks for tool call, move to tool node
@@ -106,7 +112,8 @@ def build_coder_graph(sandbox_manager):
         
         if "MAVEN_PASS" in last_message.content:
             return "contract_node" # Proceed to Gate 2
-        
+
+        # If maven fails after 30 turns, force exit
         if state.get("turn_count", 0) >= 30:
             print("[Router] MAX TURNS REACHED. Forcing exit.")
             return "END"

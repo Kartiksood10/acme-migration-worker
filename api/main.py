@@ -72,10 +72,14 @@ def run_migration_pipeline(
         )
 
         # Build Success Payload
-        payload["status"] = "COMPLETED"
         payload["generated_prs"] = final_state.get("completed_prs", [])
         payload["completed_endpoints"] = final_state.get("completed_items", [])
         payload["failed_endpoints"] = final_state.get("failed_items", [])
+        
+        if payload["failed_endpoints"]:
+            payload["status"] = "PARTIAL_FAILURE"
+        else:
+            payload["status"] = "COMPLETED"
 
     except Exception as e:
         print(f"[{task_id}] ❌ Pipeline Exception: {str(e)}")
@@ -86,9 +90,17 @@ def run_migration_pipeline(
         print(f"[{task_id}] 🧹 Cleaning up Sandbox...")
         manager.destroy_container()
 
-        # Stop timer and record execution time
+        # Clean up temporary uploaded files
+        print(f"[{task_id}] 🧹 Cleaning up Temporary Uploads...")
+        if source_ref.type == ContractType.UPLOAD and source_ref.location and os.path.exists(source_ref.location):
+            os.remove(source_ref.location)
+        if target_ref.type == ContractType.UPLOAD and target_ref.location and os.path.exists(target_ref.location):
+            os.remove(target_ref.location)
+
+        # Stop timer and record execution time in minutes (rounded to 2 decimal places)
         end_time = time.time()
-        payload["execution_time_seconds"] = round(end_time - start_time, 2)
+        elapsed_seconds = end_time - start_time
+        payload["execution_time_minutes"] = round(elapsed_seconds / 60, 2)
         
         # Dispatch the Webhook Callback
         print(f"[{task_id}] 📡 Dispatching results to webhook: {callback_url}")
@@ -131,15 +143,15 @@ async def trigger_migration(
 
     # 3. Resolve Source Contract Reference
     if source_file:
-        src_path = save_temp_file(source_file)
-        source_ref = ContractReference(type=ContractType.FILE, location=src_path)
+        content_bytes = source_file.file.read()
+        source_ref = ContractReference(type=ContractType.UPLOAD, content=content_bytes.decode("utf-8"))
     else:
         source_ref = ContractReference(type=ContractType.URL, location=source_url)
 
     # 4. Resolve Target Contract Reference
     if target_file:
-        tgt_path = save_temp_file(target_file)
-        target_ref = ContractReference(type=ContractType.FILE, location=tgt_path)
+        content_bytes = target_file.file.read()
+        target_ref = ContractReference(type=ContractType.UPLOAD, content=content_bytes.decode("utf-8"))
     else:
         target_ref = ContractReference(type=ContractType.URL, location=target_url)
 
