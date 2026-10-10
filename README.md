@@ -21,10 +21,11 @@ Instead of merely identifying breaking changes, ACME discovers affected Java cod
 
 ## 🏗️ Architecture
 
-ACME uses three LangGraph layers to coordinate deterministic processing and LLM-driven engineering tasks.
+### Architecture Diagram
 
 <img width="7864" height="7211" alt="diagram" src="https://github.com/user-attachments/assets/d35158db-91c5-480a-98aa-2c0dff7dd5b6" />
 
+ACME uses three LangGraph layers to coordinate deterministic processing and LLM-driven engineering tasks.
 
 ### 1. Planning Graph
 
