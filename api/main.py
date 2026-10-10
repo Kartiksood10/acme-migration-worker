@@ -38,7 +38,7 @@ def run_migration_pipeline(
     payload = {
         "task_id": task_id,
         "status": "FAILED",
-        "execution_time_seconds": 0,
+        "execution_time_minutes": 0,
         "generated_prs": [],
         "completed_endpoints": [],
         "failed_endpoints": [],
