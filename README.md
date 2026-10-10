@@ -23,58 +23,8 @@ Instead of merely identifying breaking changes, ACME discovers affected Java cod
 
 ACME uses three LangGraph layers to coordinate deterministic processing and LLM-driven engineering tasks.
 
-```text
-                  Source OpenAPI
-                  Target OpenAPI
-                  Consumer Repo
-                         |
-                         v
-              +----------------------+
-              |    Planning Graph    |
-              |                      |
-              | Contract Resolution  |
-              | oasdiff Analysis     |
-              | Context Construction |
-              | LLM Migration Plan   |
-              +----------+-----------+
-                         |
-                         v
-              +----------------------+
-              |   Orchestrator Graph |
-              |                      |
-              | Work Item Queue      |
-              | Migration State      |
-              | JIT Schema Lookup    |
-              | Validation Routing   |
-              +----------+-----------+
-                         |
-                         v
-              +----------------------+
-              |     Coder Graph      |
-              |                      |
-              | LLM <-> Repository   |
-              |        Tools         |
-              +----------+-----------+
-                         |
-                         v
-              +----------------------+
-              |    Docker Sandbox    |
-              |                      |
-              | Java Code Changes    |
-              | Maven Build & Tests  |
-              | Contract Validation |
-              +----------+-----------+
-                         |
-                  Validation Pass
-                         |
-                         v
-              +----------------------+
-              |     GitHub PR        |
-              |                      |
-              | Branch + Commit      |
-              | Human Review         |
-              +----------------------+
-```
+<img width="7864" height="7211" alt="diagram" src="https://github.com/user-attachments/assets/d35158db-91c5-480a-98aa-2c0dff7dd5b6" />
+
 
 ### 1. Planning Graph
 
