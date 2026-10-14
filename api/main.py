@@ -46,7 +46,7 @@ def run_migration_pipeline(
     }
 
     try:
-        # Phase 1: Run the RAM-based Planning Graph
+        # Phase 1: Run the RAM-based Planning Graph (ContractResolver -> DiffEngine -> ContextBuilder -> Planner)
         print(f"[{task_id}] --- PHASE 1: GENERATING STRATEGY ---")
         planner_pipeline = PlanningPipelineGraph()
         planning_state = planner_pipeline.run(

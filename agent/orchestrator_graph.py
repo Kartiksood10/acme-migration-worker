@@ -28,6 +28,7 @@ class OrchestratorGraph:
                 return f.read()
         return ""
 
+    # Pop the next item (API endpoint) from the Migration Plan
     def _pop_queue_node(self, state: OrchestratorState) -> Dict[str, Any]:
         """Node 1: Pulls the next work item from the pending queue."""
         queue = state.get("pending_queue", [])
@@ -46,6 +47,7 @@ class OrchestratorGraph:
             "current_item": next_item
         }
 
+    # Calls CoderGraph to execute the work item and generate a Pull Request
     def _execute_coder_node(self, state: OrchestratorState) -> Dict[str, Any]:
         """Node 2: The JIT Engine & Execution Node."""
         current_plan = state["current_item"]
@@ -57,7 +59,7 @@ class OrchestratorGraph:
         
         target_schema = context_item.get("target_contract")
 
-        # 1. JUST-IN-TIME (JIT) SCHEMA INJECTION
+        # 1. JUST-IN-TIME (JIT) SCHEMA INJECTION - For cases where the target schema is missing
         if not target_schema:
             print(f"⚠️ [JIT Engine] Missing schema for {op_id}. Initiating dynamic lookup...")
             target_path = current_plan.get("target_path")
@@ -99,7 +101,8 @@ class OrchestratorGraph:
         # 4. Build and Run the Coder Graph
         print(f"🤖 [Orchestrator] Invoking Coder ReAct Agent...")
         coder_graph = build_coder_graph(self.sandbox_manager)
-        
+
+        # Pass coder_prompt as System prompt and coder_user_prompt as Human prompt
         initial_coder_state: CoderState = {
             "messages": [
                 SystemMessage(content=self.system_prompt),

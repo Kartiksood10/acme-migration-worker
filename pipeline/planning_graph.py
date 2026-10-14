@@ -23,6 +23,7 @@ class PlanningPipelineGraph:
         # Build the LangGraph state machine
         self.graph = self._build_graph()
 
+    # ContractResolver to resolve source and target contracts
     def _resolve_contracts_node(self, state: PlanningState) -> Dict[str, Any]:
         """Node 1: Fetches and normalizes source and target contracts into RAM."""
         print("\n--- [Planning Graph] Node 1: Resolving Contracts ---")
@@ -40,6 +41,7 @@ class PlanningPipelineGraph:
             "target_openapi": target_openapi
         }
 
+    # DiffEngine class to compute breaking changes using oasdiff
     def _compute_diffs_node(self, state: PlanningState) -> Dict[str, Any]:
         """Node 2: Computes breaking changes using ephemeral temp files and auto-detection."""
         print("\n--- [Planning Graph] Node 2: Computing Diffs ---")
@@ -52,6 +54,8 @@ class PlanningPipelineGraph:
         
         return {"raw_diffs": raw_diffs}
 
+    # ContextBuilder class that takes source, target and diffs as input 
+    # Creates a migration context which is used as an input by the Planner LLM
     def _build_context_node(self, state: PlanningState) -> Dict[str, Any]:
         """Node 3: Groups diffs into work items and prepares lightweight target candidates."""
         print("\n--- [Planning Graph] Node 3: Building Context ---")
@@ -66,6 +70,7 @@ class PlanningPipelineGraph:
         
         return {"context_data": context_data}
 
+    # Planner class that takes context as input and generates a Migration Plan using LLM
     def _generate_plan_node(self, state: PlanningState) -> Dict[str, Any]:
         """Node 4: Invokes the LLM Planner to generate the structured MigrationPlan."""
         print("\n--- [Planning Graph] Node 4: Generating LLM Plan ---")
@@ -79,6 +84,8 @@ class PlanningPipelineGraph:
         
         return {"migration_plan": plan_dict}
 
+    # Build the PlanningGraph LangGraph
+    # ContractResolver -> DiffEngine -> ContextBuilder -> Planner
     def _build_graph(self) -> StateGraph:
         """Wires the nodes together sequentially using LangGraph."""
         workflow = StateGraph(PlanningState)
