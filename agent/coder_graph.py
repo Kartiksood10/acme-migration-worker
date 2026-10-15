@@ -23,6 +23,7 @@ def build_coder_graph(sandbox_manager):
 
     model_name = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
 
+    # We set reasoning_effort to none to disable internal chain-of-thought reasoning
     llm = ChatOpenAI(
         model=model_name, 
         temperature=0, 
@@ -59,7 +60,7 @@ def build_coder_graph(sandbox_manager):
             error_msg = f"MAVEN FAILED. Fix the compilation errors:\n{logs[-1000:]}"
             return {"messages": [HumanMessage(content=error_msg)]}
 
-    # Contract Node - validate if endpoint has been migrated to target patb
+    # Contract Node - validate if endpoint has been migrated to target path
     def contract_node(state: CoderState):
         print("\n[Graph] Gate 2: Running Static Contract Validation...")
         work_item = state["work_item"]
@@ -69,7 +70,7 @@ def build_coder_graph(sandbox_manager):
         target_path = work_item.get("target_path")
         source_path = work_item.get("source_path")
         
-        # Run the V1 validator
+        # Run the contract validator against the current work item's source path, target path, and target method
         passed, diag = contract_validator.validate_work_item(target_method, target_path, source_path)
         
         if passed:

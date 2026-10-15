@@ -12,6 +12,29 @@ def build_agent_tools(manager: SandboxManager):
     Factory function that creates tool instances bound to a specific SandboxManager.
     """
 
+    # ==============================================================================
+    # AGENT TOOLSET: EXECUTION & FILE MODIFICATION MECHANICS
+    # ==============================================================================
+    # This module defines the tools exposed to the Coder ReAct Agent to inspect, 
+    # search, and modify the codebase inside the Docker sandbox.
+    #
+    # Core Mechanics & Commands Used:
+    #   1. Python File I/O ('open', 'read', 'write'):
+    #      - Powers 'apply_targeted_patch' and 'create_new_java_file'. 
+    #      - Performs precise, surgical block replacements and writes new files 
+    #        (like DTOs or test fixtures) directly to disk.
+    #   2. Python List/String Slicing:
+    #      - Powers 'read_file_lines' to extract specific line windows, keeping 
+    #        token usage efficient for the LLM.
+    #   3. Linux 'grep' (via Subprocess / Container Execution):
+    #      - Powers 'search_symbol'. Recursively scans plain-text files (-r, -n, -w) 
+    #        to locate class definitions, Feign endpoints, and variable references.
+    #   4. Shell Interpreter ('sh -c'):
+    #      - Used by container execution wrappers to run compound shell commands, 
+    #        manage git operations, and trigger Maven build gates ('mvn clean test').
+    # ==============================================================================
+
+
     @tool
     def search_symbol(query: str) -> str:
         """

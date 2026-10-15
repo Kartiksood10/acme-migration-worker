@@ -102,7 +102,7 @@ class OrchestratorGraph:
         print(f"🤖 [Orchestrator] Invoking Coder ReAct Agent...")
         coder_graph = build_coder_graph(self.sandbox_manager)
 
-        # Pass coder_prompt as System prompt and coder_user_prompt as Human prompt
+        # Pass coder_prompt as System prompt (Defined Rules) and coder_user_prompt (Input and Instructions) as Human prompt
         initial_coder_state: CoderState = {
             "messages": [
                 SystemMessage(content=self.system_prompt),

@@ -1,4 +1,4 @@
-# graph_state.py
+# graph_state.py - Used to manage state of all three graphs (planning, orchestrator, coder) in a single place.
 
 from typing import TypedDict, Sequence, Dict, Any, List, Optional, Annotated
 from langchain_core.messages import BaseMessage
@@ -14,6 +14,7 @@ class PlanningState(TypedDict):
     State for the Pre-Orchestrator Planning Phase.
     Handles raw API payloads, fetching contracts, calculating diffs, and LLM planning entirely in RAM.
     """
+    # The URL of the consumer repository where the migration will be applied
     consumer_repo_url: str
     
     # Contract References supplied by the UI (URL or UPLOAD)
@@ -33,22 +34,22 @@ class PlanningState(TypedDict):
 class OrchestratorState(TypedDict):
     """
     State for the Master Orchestrator. 
-    Now holds 'target_openapi' strictly for Just-In-Time (JIT) schema injection.
+    Holds 'target_openapi' strictly for Just-In-Time (JIT) schema injection.
     """
-    consumer_repo_url: str
+    consumer_repo_url: str               # The URL of the consumer repository where the migration will be applied
     target_openapi: Dict[str, Any]       # JIT schema lookups
     context_data: Dict[str, Any]         # The payload from ContextBuilder
     pending_queue: List[Dict[str, Any]]  # The queue of planned work items from the LLM
-    current_item: Optional[Dict[str, Any]]
-    completed_items: List[str]
-    completed_prs: List[str]
-    failed_items: List[str]
+    current_item: Optional[Dict[str, Any]]  # The current work item being processed
+    completed_items: List[str]           # The list of completed work items
+    completed_prs: List[str]              # The list of completed pull requests
+    failed_items: List[str]               # The list of failed work items
 
 
 # State management for the coder_graph
 class CoderState(TypedDict):
     # 'messages' holds the chat history (Human messages, AI messages, and Tool messages).
-    # The `Annotated[..., operator.add]` part is LangGraph magic. 
+    # The `Annotated[..., operator.add]` is part of LangGraph's state management system. 
     # It tells LangGraph: "When a node returns new messages, do NOT overwrite the old list.
     # Instead, ADD (append) the new messages to the existing list."
     messages: Annotated[Sequence[BaseMessage], operator.add]
