@@ -54,18 +54,18 @@ The objective is to automate the migration workflow while keeping deterministic 
 
 ## 💻 Tech Stack
 
-| Component | Technology |
-|---|---|
-| Language | Python |
-| API Framework | FastAPI, Uvicorn |
-| Agent Orchestration | LangGraph |
-| LLM Integration | LangChain, OpenAI API |
-| LLM | GPT-5.6 Luna |
-| API Contract Analysis | oasdiff |
-| Schema Validation | Pydantic |
-| Execution Isolation | Docker, Docker SDK for Python |
-| Consumer Build & Tests | Maven, Java 21 |
-| Version Control & Delivery | Git, GitHub Pull Requests |
+| Component                  | Technology                    |
+| -------------------------- | ----------------------------- |
+| Language                   | Python                        |
+| API Framework              | FastAPI, Uvicorn              |
+| Agent Orchestration        | LangGraph                     |
+| LLM Integration            | LangChain, OpenAI API         |
+| LLM                        | GPT-5.6 Luna                  |
+| API Contract Analysis      | oasdiff                       |
+| Schema Validation          | Pydantic                      |
+| Execution Isolation        | Docker, Docker SDK for Python |
+| Consumer Build & Tests     | Maven, Java 21                |
+| Version Control & Delivery | Git, GitHub Pull Requests     |
 
 ## 🚧 Constraints & MVP Boundaries
 
@@ -82,10 +82,10 @@ The worker exposes a `POST /migrations` endpoint that accepts `multipart/form-da
 
 ### Request parameters
 
-| Field | Description |
-|---|---|
-| `consumer_repo_url` | Git URL of the downstream Java consumer repository |
-| `callback_url` | Webhook endpoint for migration completion |
+| Field                         | Description                                             |
+| ----------------------------- | ------------------------------------------------------- |
+| `consumer_repo_url`           | Git URL of the downstream Java consumer repository      |
+| `callback_url`                | Webhook endpoint for migration completion               |
 | `source_url` or `source_file` | Source OpenAPI contract: URL or uploaded JSON/YAML file |
 | `target_url` or `target_file` | Target OpenAPI contract: URL or uploaded JSON/YAML file |
 
@@ -120,13 +120,8 @@ The worker sends a JSON payload to the configured callback URL when the migratio
   "task_id": "mig_69c2b81e",
   "status": "COMPLETED",
   "execution_time_minutes": 7.15,
-  "generated_prs": [
-    "https://github.com/yourusername/consumer-service/pull/35"
-  ],
-  "completed_endpoints": [
-    "getAddress",
-    "getData"
-  ],
+  "generated_prs": ["https://github.com/yourusername/consumer-service/pull/35"],
+  "completed_endpoints": ["getAddress", "getData"],
   "failed_endpoints": [],
   "error_message": null
 }
@@ -136,7 +131,7 @@ The worker sends a JSON payload to the configured callback URL when the migratio
 
 ### Prerequisites
 
-- Python 3.11+
+- Python 3.11+ (3.12.10 preferable)
 - Docker Engine or Docker Desktop
 - Maven and Java 21 support in the sandbox image
 - `oasdiff` installed and available on `PATH`
@@ -170,7 +165,7 @@ GITHUB_PAT=your_github_personal_access_token
 
 Keep credentials private. Never commit `.env` files or expose tokens to the LLM.
 
-### 4. Start the worker
+### 4. Start the worker (Expose the API for migration)
 
 ```bash
 uvicorn api.main:app --reload
