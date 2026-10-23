@@ -21,7 +21,7 @@ app = FastAPI(title="Autonomous Migration Worker", version="1.0.0")
 # Method that runs the PlanningGraph, OrchestratorGraph, and CoderGraph in the background
 # and fires the final JSON payload to the webhook callback_url
 def run_migration_pipeline(
-    task_id: str,
+    job_id: str,
     consumer_repo_url: str,
     source_ref: ContractReference,
     target_ref: ContractReference,
@@ -31,12 +31,12 @@ def run_migration_pipeline(
     This function runs entirely in the background. It executes your existing 
     LangGraph logic and fires the final JSON payload to the webhook callback_url.
     """
-    print(f"[{task_id}] 🚀 Background task started for {consumer_repo_url}")
+    print(f"[{job_id}] 🚀 Background task started for {consumer_repo_url}")
     start_time = time.time()
     
     manager = SandboxManager()
     payload = {
-        "task_id": task_id,
+        "job_id": job_id,
         "status": "FAILED",
         "execution_time_minutes": 0,
         "generated_prs": [],
@@ -47,7 +47,7 @@ def run_migration_pipeline(
 
     try:
         # Phase 1: Run the RAM-based Planning Graph (ContractResolver -> DiffEngine -> ContextBuilder -> Planner)
-        print(f"[{task_id}] --- PHASE 1: GENERATING STRATEGY ---")
+        print(f"[{job_id}] --- PHASE 1: GENERATING STRATEGY ---")
         planner_pipeline = PlanningPipelineGraph()
         planning_state = planner_pipeline.run(
             consumer_repo_url=consumer_repo_url,
@@ -60,7 +60,7 @@ def run_migration_pipeline(
             raise ValueError("Planning failed: No migration plan was returned.")
 
         # Phase 2 & 3: Run Orchestrator and Coder Graph in Sandbox
-        print(f"[{task_id}] --- PHASE 2 & 3: INITIALIZING SANDBOX & ORCHESTRATOR ---")
+        print(f"[{job_id}] --- PHASE 2 & 3: INITIALIZING SANDBOX & ORCHESTRATOR ---")
         manager.start_container(consumer_repo_url)
         orchestrator = OrchestratorGraph(sandbox_manager=manager)
         
@@ -82,16 +82,16 @@ def run_migration_pipeline(
             payload["status"] = "COMPLETED"
 
     except Exception as e:
-        print(f"[{task_id}] ❌ Pipeline Exception: {str(e)}")
+        print(f"[{job_id}] ❌ Pipeline Exception: {str(e)}")
         payload["error_message"] = str(e)
     
     finally:
         # Clean up Docker Sandbox
-        print(f"[{task_id}] 🧹 Cleaning up Sandbox...")
+        print(f"[{job_id}] 🧹 Cleaning up Sandbox...")
         manager.destroy_container()
 
         # Clean up temporary uploaded files
-        print(f"[{task_id}] 🧹 Cleaning up Temporary Uploads...")
+        print(f"[{job_id}] 🧹 Cleaning up Temporary Uploads...")
         if source_ref.type == ContractType.UPLOAD and source_ref.location and os.path.exists(source_ref.location):
             os.remove(source_ref.location)
         if target_ref.type == ContractType.UPLOAD and target_ref.location and os.path.exists(target_ref.location):
@@ -103,12 +103,12 @@ def run_migration_pipeline(
         payload["execution_time_minutes"] = round(elapsed_seconds / 60, 2)
         
         # Dispatch the Webhook Callback
-        print(f"[{task_id}] 📡 Dispatching results to webhook: {callback_url}")
+        print(f"[{job_id}] 📡 Dispatching results to webhook: {callback_url}")
         try:
             requests.post(callback_url, json=payload, timeout=10)
-            print(f"[{task_id}] ✅ Webhook delivered successfully.")
+            print(f"[{job_id}] ✅ Webhook delivered successfully.")
         except requests.exceptions.RequestException as e:
-            print(f"[{task_id}] ❌ Webhook delivery failed: {e}")
+            print(f"[{job_id}] ❌ Webhook delivery failed: {e}")
 
 
 @app.post("/migrations", status_code=202)
@@ -131,12 +131,12 @@ async def trigger_migration(
     if not target_url and not target_file:
         raise HTTPException(status_code=400, detail="Must provide either target_url or target_file")
 
-    task_id = f"mig_{uuid.uuid4().hex[:8]}"
+    job_id = f"mig_{uuid.uuid4().hex[:8]}"
 
     # 2. Helper to safely save uploaded files to a temporary local directory
     def save_temp_file(upload_file: UploadFile) -> str:
         temp_dir = tempfile.gettempdir()
-        file_path = os.path.join(temp_dir, f"{task_id}_{upload_file.filename}")
+        file_path = os.path.join(temp_dir, f"{job_id}_{upload_file.filename}")
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(upload_file.file, buffer)
         return file_path
@@ -159,7 +159,7 @@ async def trigger_migration(
     # As soon as we send the response, the migration pipeline triggers
     background_tasks.add_task(
         run_migration_pipeline,
-        task_id=task_id,
+        job_id=job_id,
         consumer_repo_url=consumer_repo_url,
         source_ref=source_ref,
         target_ref=target_ref,
@@ -170,8 +170,8 @@ async def trigger_migration(
     return JSONResponse(
         status_code=202,
         content={
-            "task_id": task_id,
+            "job_id": job_id,
             "status": "PROCESSING",
-            "message": "Migration pipeline started in background. Results will be sent to the callback URL."
+            "message": "Migration pipeline started successfully in the background."
         }
     )
